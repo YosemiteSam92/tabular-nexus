@@ -1,0 +1,6 @@
+numpy
+gymnasium
+matplotlib
+imageio
+networkx
+tqdm
