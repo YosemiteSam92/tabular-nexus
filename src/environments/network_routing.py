@@ -1,6 +1,6 @@
 import numpy as np
-import gymansium as gym
-from gymansium import spaces
+import gymnasium as gym
+from gymnasium import spaces
 import networkx as nx
 import matplotlib.pyplot as plt
 from typing import Tuple
@@ -38,10 +38,10 @@ class NetowrkRoutingEnv(gym.Env):
         self.observation_space = spaces.Discrete(self.num_nodes)
 
         # 3. Build the network graph using NetworkX
-        # A connected Barabasi - Albert graph is realistic for networks
-        self._build_grah()
         # random see for graph initialization, exposed for reproducibility
         self.seed = seed
+        # A connected Barabasi - Albert graph, realistic for networks
+        self._build_graph()
 
         # Internal state
         self._agent_location = 0 # current node index
@@ -54,7 +54,7 @@ class NetowrkRoutingEnv(gym.Env):
         self.G = nx.barabasi_albert_graph(self.num_nodes, m=2, seed=self.seed)
 
         # assign random weights (latency) to edges between 1 and 10ms
-        rng = np.random.deafult_rng(self.seed) # initialize random generator
+        rng = np.random.default_rng(self.seed) # initialize random generator
         for (u, v) in self.G.edges():
             # latency is the "cost" of the edge
             latency = rng.integers(1, 10)
@@ -63,7 +63,7 @@ class NetowrkRoutingEnv(gym.Env):
         # Pre-compute positions for consistent rendering later
         self._node_positions = nx.spring_layout(self.G, seed=self.seed)
 
-    def reset(self, seed: int =self.seed, options: dict = None) -> Tuple[int, dict]:
+    def reset(self, seed: int, options: dict = None) -> Tuple[int, dict]:
         """
         Resets the environment to the initial state.
 
@@ -77,7 +77,8 @@ class NetowrkRoutingEnv(gym.Env):
         """
         # Seed the env's pseudo random number generator (PRNG)
         # as required by the Gym API for reproducibility
-        super().reset(seed=seed)
+        reset_seed = seed if seed is not None else self.seed
+        super().reset(seed=reset_seed)
 
         # Pick random Start and Goal nodes, ensuring they are not the same
         self._agent_location = self.np_random.integers(0, self.num_nodes)
@@ -94,7 +95,7 @@ class NetowrkRoutingEnv(gym.Env):
             self.G, 
             source=self._agent_location,
             target=self._target_location,
-            weigth="weight"
+            weight="weight"
         )
         info = {"optimal_distance": shortest_path_len}
 
